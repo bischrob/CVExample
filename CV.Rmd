@@ -1,0 +1,141 @@
+---
+name: Leopard
+surname: Seal
+position: "Hunter"
+address: |
+  | Iceberg 3
+  | Antartica
+phone: 555 555 555
+www: rjbischo.github.io
+email: leopard@penguins.notawebsite
+twitter: nope
+github: nope
+linkedin: nope
+docname: "CV"
+date: "`r format(Sys.time(), '%B %Y')`"
+headcolor: "414141"
+output: 
+  vitae::awesomecv
+editor_options: 
+  chunk_output_type: console
+csl: plos-one.csl
+---
+
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+# libraries
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(RefManageR)
+library(vitae)
+library(rio)
+library(lubridate)
+library(here)
+if(!require(bibtex))remotes::install_github("ROpenSci/bibtex")
+i_am("CV.Rmd")
+# load CV data
+CVdata <-
+  rio::import(here("CVdata.xlsx")) %>%
+  dplyr::filter(is.na(Exclude)) %>%
+  dplyr::mutate_at(dplyr::vars(start), lubridate::ymd) %>%
+  dplyr::arrange(dplyr::desc(start))
+
+# load bibliographic data
+BibOptions(
+  first.inits = F,
+  style = "latex",
+  dashed = F,
+  max.names = 20
+)
+shell(paste0("./","highlightName.ps1"," '","Publications.bib","'"),
+      shell = "powershell")
+shell(paste0("./","highlightName.ps1"," '","ProfessionalPresentations.bib","'"),
+      shell = "powershell")
+shell(paste0("./","highlightName.ps1"," '","PublicPresentations.bib","'"),
+      shell = "powershell")
+bib1 <- RefManageR::ReadBib('Publications.bib')
+bib2 <- RefManageR::ReadBib('ProfessionalPresentations.bib')
+bib3 <- RefManageR::ReadBib('PublicPresentations.bib')
+```
+
+# Education
+
+```{r}
+CVdata %>%
+  dplyr::filter(section == "Education") %>% 
+  vitae::detailed_entries(what = what,when = when,with = with)
+```
+
+<!-- # Skills -->
+
+```{r echo=FALSE, include=F}
+# currently not included Need to add # Skills if included and set include to T
+CVdata %>%
+  dplyr::filter(section == "Skills") %>%
+  dplyr::arrange(what) %>% 
+  vitae::detailed_entries(what = what, why = details)
+```
+
+# Research interests
+
+```{r echo=FALSE}
+interests <- CVdata %>%
+  dplyr::filter(section == "Research Interests") %>%
+  dplyr::select(what) %>% extract2(1)
+```
+
+`r interests`
+
+# Publications
+
+```{r results='asis'}
+print(bib1)
+```
+
+# Research Experience
+
+```{r}
+CVdata %>%
+  dplyr::filter(section == "Research Experience") %>%
+  vitae::detailed_entries(
+    what = what,
+    when = when,
+    where = where,
+    why = details
+  )
+```
+
+# Professional Presentations
+
+```{r results='asis'}
+print(bib2)
+```
+
+# Public Presentations
+
+```{r results='asis'}
+print(bib3)
+```
+
+
+# Service
+
+```{r include = T}
+CVdata %>%
+  dplyr::filter(section == "Service") %>%
+  vitae::detailed_entries(what, when, with, where)
+```
+
+
+
+# Awards
+
+```{r}
+CVdata %>%
+  dplyr::filter(section == "Awards") %>%
+  vitae::brief_entries(what, when)
+```
